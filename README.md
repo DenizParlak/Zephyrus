@@ -1,5 +1,5 @@
 # Zephyrus
-Auditing &amp; Hardening Tool 4 Kubernetes
+Auditing &amp; Hardening Tool for Kubernetes
 
 Zephyrus is developing for system and application administrators, security specialists, auditors, help desk, and platform deployment personnel who plan to develop, deploy, assess, or secure solutions that incorporate Kubernetes.
 
