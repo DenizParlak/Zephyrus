@@ -37,6 +37,7 @@ Zephyrus provides completely hardening solution and establishing a secure config
 ### ChangeLog
 
 2/9/2017 -  Added 20 audit modules for master node.
+
 12/4/2018 - Added 5 audit modules for master node.
             UX changed.
 
