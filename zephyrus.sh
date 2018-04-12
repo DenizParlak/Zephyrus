@@ -26,6 +26,14 @@ apid17="1.1.17 Ensure that the --audit-log-maxage argument is set to 30 or as ap
 apid18="1.1.18 Ensure that the --audit-log-maxbackup argument is set to 10 or as appropriate"
 apid19="1.1.19 Ensure that the --audit-log-maxsize argument is set to 100 or as appropriate"
 apid20="1.1.20 Ensure that the --authorization-mode argument is not set to AlwaysAllow"
+apid21="1.1.20 Ensure that the --token-auth-file parameter is not set"
+apid21b="1.1.21 Ensure that the --kubelet-certificate-authority argument is set as appropriate"
+apid22="1.1.22 Ensure that the --kubelet-client-certificate and --kubelet-clientkey arguments are set as appropriate"
+apid23="1.1.23 Ensure that the --service-account-lookup argument is set to true"
+apid24="1.1.24 Ensure that the admission control policy is set to PodSecurityPolicy"
+apid25="1.1.25 Ensure that the --service-account-key-file argument is set as appropriate"
+
+
 
 show(){
 printf "${!1}\n"
@@ -395,6 +403,99 @@ fi
 
 api20
 echo -en '\n'
+
+api21(){
+token_auth=$(ps -ef | grep kube-apiserver | grep -o 'token-auth-file=[^ ,]\+')
+
+if [ "$token_auth" == "" ];then
+echo -en "${gr}[PASS]${xx}" `show apid21`
+else
+echo -en "${re}[WARN]${xx}" `show apid21`
+fi
+
+}
+
+api21
+echo -en '\n'
+
+
+api21b(){
+cert_auth=$(ps -ef | grep kube-apiserver | grep -o 'kubelet-certificate-authority=[^ ,]\+')
+if [ "$cert_auth" == "" ];then
+echo -en "${re}[WARN]${xx}" `show apid21b`
+else
+echo -en "${gr}[PASS]${xx}" `show apid21b`
+fi
+
+}
+
+api21b
+echo -en '\n'
+
+
+
+api22(){
+cert_key=$(ps -ef | grep kube-apiserver | grep -o 'kubelet-client-certificate=[^ ,]\+')
+if [ "$cert_key" == "" ];then
+echo -en "${re}[WARN]${xx}" `show apid22`
+else
+echo -en "${gr}[PASS]${xx}" `show apid22`
+fi
+
+}
+
+api22
+echo -en '\n'
+
+
+
+api23(){
+cert_key=$(ps -ef | grep kube-apiserver | grep -o 'service-account-lookup=[^ ,]\+' | awk -F "=" '{print $2}')
+if [ "$cert_key" == "" ];then
+echo -en "${re}[WARN]${xx}" `show apid23`
+elif [ "$cert_key" == "false" ];then
+echo -en echo -en "${re}[WARN]${xx}" `show apid23`
+else 
+echo -en "${re}[PASS]${xx}" `show apid23`
+fi
+
+}
+
+api23
+echo -en '\n'
+
+
+
+api24(){
+adm_cont=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+')
+adm_contb=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+' | awk -F "=" '{print $2}' | grep "PodSecurityPolicy")
+if [ "$adm_cont" == "" ];then
+echo -en "${re}[WARN]${xx}" `show apid24`
+elif [ "$adm_contb" = "" ];then
+echo -en "${re}[WARN]${xx}" `show apid24`
+else
+echo -en "${gr}[PASS]${xx}" `show apid24`
+fi
+
+}
+
+api24
+echo -en '\n'
+
+
+api25(){
+serv_key=$(ps -ef | grep kube-apiserver | grep -o 'service-account-key-file=[^ ,]\+')
+if [ "$serv_key" == "" ];then
+echo -en "${re}[WARN]${xx}" `show apid25`
+else
+echo -en "${gr}[PASS]${xx}" `show apid25`
+fi
+
+}
+
+api25
+echo -en '\n'
+
 
 checkfunc(){
   if [[ $checknum ]];then
