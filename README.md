@@ -28,10 +28,17 @@ Zephyrus provides completely hardening solution and establishing a secure config
 - 1.1.18 Ensure that the --audit-log-maxbackup argument is set to 10 or as appropriate
 - 1.1.19 Ensure that the --audit-log-maxsize argument is set to 100 or as appropriate
 - 1.1.20 Ensure that the --authorization-mode argument is not set to AlwaysAllow
+- 1.1.21 Ensure that the --kubelet-certificate-authority argument is set as appropriate
+- 1.1.22 Ensure that the --kubelet-client-certificate and --kubelet-clientkey arguments are set as appropriate
+- 1.1.23 Ensure that the --service-account-lookup argument is set to true
+- 1.1.24 Ensure that the admission control policy is set to PodSecurityPolicy
+- 1.1.25 Ensure that the --service-account-key-file argument is set as appropriate
 
 ### ChangeLog
 
-2/9/2017 - Added 20 audit modules for master node.
+2/9/2017 -  Added 20 audit modules for master node.
+12/4/2018 - Added 5 audit modules for master node.
+            UX changed.
 
 # Requirements
 
