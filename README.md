@@ -52,4 +52,4 @@ git clone https://github.com/DenizParlak/Zephyrus.git && cd Zephyrus && chmod +x
 
 
 
-![Zephyrus](https://i.hizliresim.com/VMkk6Z.jpg)
+![Zephyrus](https://i.hizliresim.com/Ooj3J5.jpg)
