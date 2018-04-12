@@ -50,7 +50,3 @@ Make sure that the Kubernetes package is installed on the system and kube-apiser
 # Usage
 
 git clone https://github.com/DenizParlak/Zephyrus.git && cd Zephyrus && chmod +x Zephyrus.sh && ./Zephyrus.sh
-
-
-
-![Zephyrus](https://i.hizliresim.com/Ooj3J5.jpg)
