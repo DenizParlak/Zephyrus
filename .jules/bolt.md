@@ -1,0 +1,3 @@
+## 2026-06-18 - Drastic fork reduction via variable caching
+**Learning:** Bash scripts that repeatedly call external pipelines (ps | grep | awk) for the same data source suffer massive performance degradation due to process fork overhead. Caching the data source once into a global variable and using Bash internal regex matching ([[ $var =~ regex ]]) eliminates almost all forks.
+**Action:** In shell scripts, always look for repeated patterns of data extraction from stable sources (like process lists or config files). Cache them early and use internal Bash string manipulation/regex for extraction.
