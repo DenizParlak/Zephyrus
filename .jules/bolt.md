@@ -1,0 +1,3 @@
+## 2026-07-07 - Reducing process fork overhead in Bash
+**Learning:** In performance-critical Bash scripts, repeated execution of external commands like `ps`, `grep`, and `awk` in a loop or across many functions creates significant overhead due to process forks (execve). Caching the output of such commands in a variable and using Bash's internal regex matching (`[[ $VAR =~ REGEX ]]`) and `BASH_REMATCH` can reduce the number of forks by 95% or more.
+**Action:** Always look for repeated `ps | grep` or similar patterns and refactor them to use a cached variable and internal Bash string processing. Use `strace -f -e trace=execve` to measure and verify the reduction in forks.
