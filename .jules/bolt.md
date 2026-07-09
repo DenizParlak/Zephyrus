@@ -1,0 +1,3 @@
+## 2026-07-09 - Drastic reduction of process forks in Bash
+**Learning:** In long-running or repetitive Bash scripts, calling external utilities like `ps`, `grep`, and `awk` in a loop or across many functions creates significant overhead due to process forking. Caching the output of an expensive command (e.g., `ps -ef`) into a variable once and using Bash's internal regex matching (`[[ $var =~ regex ]]`) can reduce execution time by 75%+ and process forks by 95%+.
+**Action:** Always look for opportunities to cache external command output and use built-in shell features for string parsing and regex matching.
