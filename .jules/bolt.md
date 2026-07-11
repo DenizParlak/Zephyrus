@@ -1,0 +1,3 @@
+## 2025-01-24 - Redundant Process Forks in Bash Audit Script
+**Learning:** In Bash-based auditing tools that inspect process arguments, repeatedly calling `ps -ef` combined with `grep` and `awk` for each check creates significant overhead (O(N) forks where N is the number of checks). Caching the process command line once and using Bash built-in regex matching (`[[ $var =~ regex ]]`) can reduce fork count by over 90% and significantly improve performance.
+**Action:** Always cache expensive external command outputs like `ps` or `cat /proc/...` into variables and use internal Bash string manipulation or regex for parsing multiple attributes from the same source.
