@@ -1,0 +1,3 @@
+## 2026-07-21 - Caching External Command Outputs in Bash Audit Scripts
+**Learning:** Sequential pipelines involving multiple external commands (like `ps | grep | grep | awk`) executed repeatedly inside shell functions incur significant process fork overhead (execve). Caching the output of the external command in a global variable (`KUBE_APISERVER_ARGS`) and parsing it inside functions using built-in Bash regex matching (`[[ $VAR =~ REGEX ]]` and `${BASH_REMATCH}`) avoids process forks completely.
+**Action:** Always identify repetitive external commands inside script loops or sequential function calls, cache their results globally, and parse them with native shell capabilities instead of spawning child processes.
