@@ -1,0 +1,3 @@
+## 2026-07-31 - Initial Audit of Zephyrus Fork Overhead
+**Learning:** The `zephyrus.sh` script executes 25 checks sequentially. Every single check spawns multiple subprocesses (`ps`, `grep`, `awk`) to search for the same `kube-apiserver` arguments. This results in over 140 process forks (`execve`) for a single execution, taking ~0.4s even on an idle machine.
+**Action:** Cache the command line of `kube-apiserver` in a global Bash variable at startup. Extract flag values using pure Bash regex matching (`[[ $VAR =~ REGEX ]]`), which executes in-process and avoids any subprocess spawning, reducing process forks to nearly zero.
