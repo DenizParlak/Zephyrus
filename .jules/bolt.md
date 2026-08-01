@@ -1,0 +1,3 @@
+## 2026-08-01 - [Bash subprocess fork optimization in Zephyrus]
+**Learning:** Repetitive spawning of subprocess pipelines (such as `ps -ef | grep | awk` in every audit rule function) is an extremely severe performance bottleneck in shell scripts. By caching the output of the process listing once into a global variable (`KUBE_APISERVER_ARGS`) and then utilizing Bash internal regex matching (`[[ $VAR =~ REGEX ]]`) and dynamic variable assignment (`printf -v`), we eliminate subshell overhead completely.
+**Action:** Always cache command results at the start of shell audits and use native Bash regex matching to avoid unnecessary forks and process executions.
