@@ -1,0 +1,3 @@
+## 2026-08-02 - Eliminate Redundant Sub-process Spawning in Bash Audit Tools
+**Learning:** Repetitive process spawning (such as spawning `ps -ef`, `grep`, and `awk` over 100 times in a single audit execution) introduces massive OS fork overhead. By caching running command-line arguments in a single variable at the start, and then matching patterns purely via native Bash regex matching (`[[ $VAR =~ REGEX ]]`) and assigning variables dynamically using `printf -v`, we can eliminate nearly all forks.
+**Action:** Always inspect loops or sequential checks that query running processes or state, cache the values globally, and parse with native Bash constructs to keep execution time under 50ms and fork counts minimal.
