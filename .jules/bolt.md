@@ -1,0 +1,3 @@
+## 2026-08-05 - Global Argument Caching and Native Bash Parsing
+**Learning:** External commands like `ps`, `grep`, and `awk` within hot loops or repeated script functions spawn massive numbers of process forks. In `zephyrus.sh`, querying process parameters individually for 25+ checks spawned over 150 process forks. By caching the arguments of `kube-apiserver` in a global variable once at initialization and leveraging native Bash regex matching, process forks were dramatically minimized.
+**Action:** Always pre-cache expensive process argument lists and use `[[ $VAR =~ REGEX ]]` matching along with `BASH_REMATCH` and `printf -v` to extract parameters efficiently and safely without spawning sub-processes.
