@@ -39,6 +39,22 @@ show(){
 printf "${!1}\n"
 }
 
+# --- PERFORMANCE OPTIMIZATION ---
+# Cache the output of 'ps -ef' at startup to prevent launching the 'ps' process 28+ times.
+# This eliminates redundant subprocess spawning, drastically reducing execution time and system CPU overhead.
+KUBE_PS_EF_CACHE=$(ps -ef)
+
+ps() {
+  # If ps is called with -ef, return the pre-cached ps output directly from memory.
+  # Otherwise, delegate to the original system 'ps' command.
+  if [[ "$*" == "-ef" ]]; then
+    printf '%s\n' "$KUBE_PS_EF_CACHE"
+  else
+    command ps "$@"
+  fi
+}
+# --------------------------------
+
 
 usage(){
   echo "
