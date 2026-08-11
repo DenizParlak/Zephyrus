@@ -34,6 +34,27 @@ apid24="1.1.24 Ensure that the admission control policy is set to PodSecurityPol
 apid25="1.1.25 Ensure that the --service-account-key-file argument is set as appropriate"
 
 
+# Cache the kube-apiserver arguments once at startup to avoid spawning 100+ process forks.
+# We use a space-padded string for reliable boundary matching using native Bash regex.
+KUBE_APISERVER_ARGS=" $(ps -ef | grep "[k]ube-apiserver") "
+
+# Helper function to extract a flag's value natively in Bash using regex and dynamic variable assignment.
+# This completely eliminates subshell/fork overhead for query lookups.
+get_flag_value() {
+  local flag="$1"
+  local var_name="$2"
+  printf -v "$var_name" "%s" ""
+  local regex="[[:space:]]--${flag}=([^[:space:]]+)"
+  if [[ "$KUBE_APISERVER_ARGS" =~ $regex ]]; then
+    printf -v "$var_name" "%s" "${BASH_REMATCH[1]}"
+  else
+    local regex_bool="[[:space:]]--${flag}([[:space:]]|$)"
+    if [[ "$KUBE_APISERVER_ARGS" =~ $regex_bool ]]; then
+      printf -v "$var_name" "%s" "true"
+    fi
+  fi
+}
+
 
 show(){
 printf "${!1}\n"
@@ -99,10 +120,10 @@ echo ""
 
 api1(){
 
-allow_priv=$(ps -ef | grep kube-apiserver | grep -o 'allow-privileged=[^ ,]\+' | awk -F "=" '{print $2}')
-if [ "$allow_priv" == "false" ];then
+get_flag_value "allow-privileged" allow_priv
+if [[ "$allow_priv" == "false" ]];then
 echo -en "${gr}[PASS]${xx}"
-elif [ "$allow_priv" == "" ]
+elif [[ "$allow_priv" == "" ]]
 then
 echo "${gr}[PASS]${xx}" `show apid1`
 else
@@ -116,11 +137,11 @@ api1
 echo -en '\n'
 
 api2(){
-anon_auth=$(ps -ef | grep kube-apiserver | grep -o 'anonymous-auth=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "anonymous-auth" anon_auth
 
-if [ "$anon_auth" == "false" ];then
+if [[ "$anon_auth" == "false" ]];then
 echo -en "${gr}[PASS]${xx}"
-elif [ "$anon_auth" == "" ]
+elif [[ "$anon_auth" == "" ]]
 then
 echo -en "${gr}[PASS]${xx}" `  show apid2`
 else
@@ -132,9 +153,9 @@ fi
 api2
 
 api3(){
-basic_aufi=$(ps -ef | grep kube-apiserver | grep -o 'basic-auth-file=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "basic-auth-file" basic_aufi
 
-if [ "$anon_auth" == "" ];then
+if [[ "$basic_aufi" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid3`
 else
 echo -en "${re}[WARN]${xx}" `show apid3`
@@ -147,9 +168,9 @@ api3
 echo -en '\n'
 
 api4(){
-ins_token=$(ps -ef | grep kube-apiserver | grep -o 'insecure-allow-any-token=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "insecure-allow-any-token" ins_token
 
-if [ "$ins_token" == "" ];then
+if [[ "$ins_token" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid4`
 else
 echo -en "${re}[WARN]${xx}" `show apid4`
@@ -161,11 +182,11 @@ api4
 echo -en '\n'
 
 api5(){
-kube_http=$(ps -ef | grep kube-apiserver | grep -o 'kubelet-https=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "kubelet-https" kube_http
 
-if [ "$kube_http" == "" ];then
+if [[ "$kube_http" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid5`
-elif [ "$kube_http" == "true"];then
+elif [[ "$kube_http" == "true" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid5`
 else
 echo -en "${re}[WARN]${xx}" `show apid5`
@@ -177,9 +198,9 @@ api5
 echo -en '\n'
 
 api6(){
-ins_bind=$(ps -ef | grep kube-apiserver | grep -o 'insecure-bind-address=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "insecure-bind-address" ins_bind
 
-if [ "$ins_bind" == "" ];then
+if [[ "$ins_bind" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid6`
 else
 echo -en "${re}[WARN]${xx}" `show apid6`
@@ -191,7 +212,7 @@ api6
 echo -en '\n'
 
 api7(){
-ins_port=$(ps -ef | grep kube-apiserver | grep -o 'insecure-port=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "insecure-port" ins_port
 
 if [[ "$ins_port" == "0" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid7`
@@ -205,12 +226,12 @@ api7
 echo -en '\n'
 
 api8(){
-sec_port=$(ps -ef | grep kube-apiserver | grep -o 'secure-port=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "secure-port" sec_port
 
 
 if [[ "$sec_port" == "0" ]];then
 echo -en "${re}[WARN]${xx}" `show apid8`
-elif [ "$sec_port" == "" ];then
+elif [[ "$sec_port" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid8`
 else
 echo -en "${gr}[PASS]${xx}" `show apid8`
@@ -221,7 +242,7 @@ api8
 echo -en '\n'
 
 api9(){
-prof=$(ps -ef | grep kube-apiserver | grep -o 'profiling=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "profiling" prof
 
 if [[ "$prof" == "false" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid9`
@@ -235,7 +256,7 @@ api9
 echo -en '\n'
 
 api10(){
-rep_malf=$(ps -ef | grep kube-apiserver | grep -o 'repair-malformed-updates=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "repair-malformed-updates" rep_malf
 
 if [[ "$rep_malf" == "false" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid10`
@@ -249,9 +270,9 @@ api10
 echo -en '\n'
 
 api11(){
-alw_admit=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "admission-control" alw_admit
 
-if [[ "$alw_admit" == "" ]];then
+if [[ "$alw_admit" == "" ]] || [[ "$alw_admit" != *AlwaysAdmit* ]];then
 echo -en "${gr}[PASS]${xx}" `show apid11`
 else
 echo -en "${re}[WARN]${xx}" `show apid11`
@@ -263,11 +284,11 @@ api11
 echo -en '\n'
 
 api12(){
-alw_pull=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "admission-control" alw_pull
 
-if [[ "$alw_pull" == "AlwaysPullImages" ]];then
+if [[ "$alw_pull" == *AlwaysPullImages* ]];then
 echo -en "${gr}[PASS]${xx}" `show apid12`
-elif [ "$alw_pull" == "" ];then
+elif [[ "$alw_pull" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid12`
 else
 echo -en "${re}[WARN]${xx}" `show apid12`
@@ -279,11 +300,11 @@ api12
 echo -en '\n'
 
 api13(){
-deny_esc=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "admission-control" deny_esc
 
-if [[ "$deny_esc" == "DenyEscalatingExec" ]];then
+if [[ "$deny_esc" == *DenyEscalatingExec* ]];then
 echo -en "${gr}[PASS]${xx}" `show apid13`
-elif [ "$deny_esc" == "" ];then
+elif [[ "$deny_esc" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid13`
 else
 echo -en "${re}[WARN]${xx}" `show apid13`
@@ -295,11 +316,11 @@ api13
 echo -en '\n'
 
 api14(){
-sec_cont=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "admission-control" sec_cont
 
-if [[ "$sec_cont" == "SecurityContextDeny" ]];then
+if [[ "$sec_cont" == *SecurityContextDeny* ]];then
 echo -en "${gr}[PASS]${xx}" `show apid14`
-elif [ "$sec_cont" == "" ];then
+elif [[ "$sec_cont" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid14`
 else
 echo -en "${re}[WARN]${xx}" `show apid14`
@@ -311,11 +332,11 @@ api14
 echo -en '\n'
 
 api15(){
-namep_life=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "admission-control" namep_life
 
-if [[ "$namep_life" == "NamespaceLifecycle" ]];then
+if [[ "$namep_life" == *NamespaceLifecycle* ]];then
 echo -en "${gr}[PASS]${xx}" `show apid15`
-elif [ "$namep_life" == "" ];then
+elif [[ "$namep_life" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid15`
 else
 echo -en "${re}[WARN]${xx}" `show apid15`
@@ -327,7 +348,7 @@ api15
 echo -en '\n'
 
 api16(){
-aud_logpa=$(ps -ef | grep kube-apiserver | grep -o 'audit-log-path=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "audit-log-path" aud_logpa
 
 if [[ "$aud_logpa" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid16`
@@ -342,15 +363,15 @@ api16
 echo -en '\n'
 
 api17(){
-aud_logmax=$(ps -ef | grep kube-apiserver | grep -o 'audit-log-maxage=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "audit-log-maxage" aud_logmax
 
 
 if [[ "$aud_logmax" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid17`
-elif [ $aud_logmax >= 30 ];then
+elif [[ "$aud_logmax" -ge 30 ]];then
 echo -en "${gr}[PASS]${xx}" `show apid17`
 else
-echo -en "${gr}[PASS]${xx}" `show apid17`
+echo -en "${re}[WARN]${xx}" `show apid17`
 fi
 
 }
@@ -359,14 +380,14 @@ api17
 echo -en '\n'
 
 api18(){
-aud_logbac=$(ps -ef | grep kube-apiserver | grep -o 'audit-log-maxbackup=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "audit-log-maxbackup" aud_logbac
 
 if [[ "$aud_logbac" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid18`
-elif [ $aud_logbac >= 10 ];then
+elif [[ "$aud_logbac" -ge 10 ]];then
 echo -en "${gr}[PASS]${xx}" `show apid18`
 else
-echo -en "${gr}[PASS]${xx}" `show apid18`
+echo -en "${re}[WARN]${xx}" `show apid18`
 fi
 
 }
@@ -375,14 +396,14 @@ api18
 echo -en '\n'
 
 api19(){
-aud_logmsize=$(ps -ef | grep kube-apiserver | grep -o 'audit-log-maxsize=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "audit-log-maxsize" aud_logmsize
 
 if [[ "$aud_logmsize" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid19`
-elif [ $aud_logmsize >= 100 ];then
+elif [[ "$aud_logmsize" -ge 100 ]];then
 echo -en "${gr}[PASS]${xx}" `show apid19`
 else
-echo -en "${gr}[PASS]${xx}" `show apid8`
+echo -en "${re}[WARN]${xx}" `show apid19`
 fi
 
 }
@@ -391,9 +412,9 @@ api19
 echo -en '\n'
 
 api20(){
-auth_mode=$(ps -ef | grep kube-apiserver | grep -o 'authorization-mode=[^ ,]\+' | awk -F "=" '{print $2}')
+get_flag_value "authorization-mode" auth_mode
 
-if [[ "$auth_mode" == "AlwaysAllow" ]];then
+if [[ "$auth_mode" == *AlwaysAllow* ]];then
 echo -en "${re}[WARN]${xx}" `show apid20`
 else
 echo -en "${gr}[PASS]${xx}" `show apid20`
@@ -405,9 +426,9 @@ api20
 echo -en '\n'
 
 api21(){
-token_auth=$(ps -ef | grep kube-apiserver | grep -o 'token-auth-file=[^ ,]\+')
+get_flag_value "token-auth-file" token_auth
 
-if [ "$token_auth" == "" ];then
+if [[ "$token_auth" == "" ]];then
 echo -en "${gr}[PASS]${xx}" `show apid21`
 else
 echo -en "${re}[WARN]${xx}" `show apid21`
@@ -420,8 +441,8 @@ echo -en '\n'
 
 
 api21b(){
-cert_auth=$(ps -ef | grep kube-apiserver | grep -o 'kubelet-certificate-authority=[^ ,]\+')
-if [ "$cert_auth" == "" ];then
+get_flag_value "kubelet-certificate-authority" cert_auth
+if [[ "$cert_auth" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid21b`
 else
 echo -en "${gr}[PASS]${xx}" `show apid21b`
@@ -435,8 +456,8 @@ echo -en '\n'
 
 
 api22(){
-cert_key=$(ps -ef | grep kube-apiserver | grep -o 'kubelet-client-certificate=[^ ,]\+')
-if [ "$cert_key" == "" ];then
+get_flag_value "kubelet-client-certificate" cert_key
+if [[ "$cert_key" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid22`
 else
 echo -en "${gr}[PASS]${xx}" `show apid22`
@@ -450,13 +471,13 @@ echo -en '\n'
 
 
 api23(){
-cert_key=$(ps -ef | grep kube-apiserver | grep -o 'service-account-lookup=[^ ,]\+' | awk -F "=" '{print $2}')
-if [ "$cert_key" == "" ];then
+get_flag_value "service-account-lookup" cert_key
+if [[ "$cert_key" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid23`
-elif [ "$cert_key" == "false" ];then
-echo -en echo -en "${re}[WARN]${xx}" `show apid23`
+elif [[ "$cert_key" == "false" ]];then
+echo -en "${re}[WARN]${xx}" `show apid23`
 else 
-echo -en "${re}[PASS]${xx}" `show apid23`
+echo -en "${gr}[PASS]${xx}" `show apid23`
 fi
 
 }
@@ -467,11 +488,10 @@ echo -en '\n'
 
 
 api24(){
-adm_cont=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+')
-adm_contb=$(ps -ef | grep kube-apiserver | grep -o 'admission-control=[^ ,]\+' | awk -F "=" '{print $2}' | grep "PodSecurityPolicy")
-if [ "$adm_cont" == "" ];then
+get_flag_value "admission-control" adm_cont
+if [[ "$adm_cont" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid24`
-elif [ "$adm_contb" = "" ];then
+elif [[ "$adm_cont" != *PodSecurityPolicy* ]];then
 echo -en "${re}[WARN]${xx}" `show apid24`
 else
 echo -en "${gr}[PASS]${xx}" `show apid24`
@@ -484,8 +504,8 @@ echo -en '\n'
 
 
 api25(){
-serv_key=$(ps -ef | grep kube-apiserver | grep -o 'service-account-key-file=[^ ,]\+')
-if [ "$serv_key" == "" ];then
+get_flag_value "service-account-key-file" serv_key
+if [[ "$serv_key" == "" ]];then
 echo -en "${re}[WARN]${xx}" `show apid25`
 else
 echo -en "${gr}[PASS]${xx}" `show apid25`
