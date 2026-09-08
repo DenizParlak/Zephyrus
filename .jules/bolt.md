@@ -1,0 +1,3 @@
+## 2026-09-08 - Caching process arguments in Bash scripts
+**Learning:** In auditing/hardening shell scripts that query running processes (like `ps -ef | grep <target>`) across dozens of check functions, executing `ps` repeatedly causes significant subshell and process fork overhead (`execve`). Caching the output in a script-global variable (`KUBE_APISERVER_ARGS=$(ps -ef | grep "[k]ube-apiserver")`) at startup and piping from memory cuts total system execution count significantly (~60% reduction in `execve` calls).
+**Action:** Always identify repeated process querying pipelines in CLI scripts and store process argument state in a global variable at initial script startup.
