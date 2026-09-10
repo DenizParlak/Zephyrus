@@ -1,0 +1,3 @@
+## 2026-09-10 - Process Fork Elimination via Global Argument Caching and Native Bash Parsing
+**Learning:** `zephyrus.sh` previously executed `ps -ef | grep kube-apiserver | grep -o ... | awk ...` in every check function (`api1` through `api25`), spawning 145 process forks per run. Caching `KUBE_APISERVER_ARGS` globally at startup and using `[[ $KUBE_APISERVER_ARGS =~ regex ]]` with `printf -v` eliminates virtually all subshells/process forks.
+**Action:** Always cache process argument strings once at startup when performing repeated auditing checks on command-line flags and extract parameters using native shell regex matching.
