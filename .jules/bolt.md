@@ -1,0 +1,3 @@
+## 2026-10-09 - Global Argument Caching and Native Bash Parsing
+**Learning:** In `zephyrus.sh`, 26 individual check functions repeatedly executed subshell pipelines (`ps -ef | grep kube-apiserver | grep -o ... | awk -F "=" ...`), causing 158 process forks per audit run. Caching `ps -ef` command-line arguments once globally into `KUBE_APISERVER_ARGS` and using native Bash regex matching with `printf -v` eliminated process forks almost completely.
+**Action:** When auditing or parsing process arguments in Bash scripts, cache `ps -ef` output once at startup and use native `[[ $VAR =~ REGEX ]]` with `printf -v` for subshell-free parameter extraction.
