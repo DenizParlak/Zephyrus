@@ -1,0 +1,3 @@
+## 2026-10-25 - Caching KUBE_APISERVER_ARGS process output
+**Learning:** `zephyrus.sh` executed `ps -ef` in every single check function (`api1` to `api25`), resulting in over 136 process forks (`execve` calls) per run. Caching `ps -ef | grep "[k]ube-apiserver"` into a single global variable `KUBE_APISERVER_ARGS` at script startup reduced process forks to 58 (a ~57% reduction) and reduced execution time from ~0.595s to ~0.175s (~70% faster).
+**Action:** When auditing or parsing system process arguments repeatedly across multiple shell functions, always capture process output into a global variable at script initialization.
