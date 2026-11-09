@@ -1,0 +1,3 @@
+## 2026-11-09 - Caching Process Arguments in Bash Auditing Scripts
+**Learning:** Repetitive process table inspections using `ps -ef | grep <proc>` inside audit loops or modular functions incur massive process fork overhead (~147 execve calls across 27 checks, ~338ms). Caching the target process command line into a global variable (`KUBE_APISERVER_ARGS=$(ps -ef | grep '[k]ube-apiserver')`) and piping via `printf "%s\n"` cuts execution time by over 50% (~157ms) and fork count to 57 without altering system state or overriding standard utilities.
+**Action:** When auditing static daemon arguments in shell scripts, sample process arguments once at startup into a scoped variable rather than executing process listing commands per check.
